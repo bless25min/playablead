@@ -1187,18 +1187,18 @@
             </div>
             <div class="hud-item">
                 <!-- 修改：強調是虛擬帳戶 -->
-                <span class="hud-label">虛擬帳戶淨值</span>
-                <span class="hud-value" id="hud-equity">$10000.00</span>
+                <span class="hud-label">學習分數</span>
+                <span class="hud-value" id="hud-equity">10000 分</span>
             </div>
             <div class="hud-item">
-                <span class="hud-label">浮動損益</span>
-                <span class="hud-value" id="hud-pl">$0.00</span>
+                <span class="hud-label">階段表現</span>
+                <span class="hud-value" id="hud-pl">0 分</span>
             </div>
         </div>
         <div class="hud-right">
             <div class="hud-item">
-                <span class="hud-label">花費時間</span>
-                <span class="hud-value" id="hud-timer">00:00</span>
+                <span class="hud-label">剩餘時間</span>
+                <span class="hud-value" id="hud-timer">05:00</span>
             </div>
             <div class="hud-item progress-container">
                 <span class="hud-label">挑戰進度</span>
@@ -1358,9 +1358,11 @@
                 </div>
 
             </div>
-            <!-- 修改：CTA 按鈕文字保持中性、教育性 -->
-            <a href="https://www.massenlighten.com/soya%E5%A5%B3%E7%A5%9E" target="_blank" class="btn cta-button" id="ctaButton">了解更多交易知識</a>
-            <button class="btn btn-secondary" id="restartButton" style="margin-top: 15px;">重新挑戰</button>
+            <div class="cta-area" style="margin-bottom: 15px;">
+              <a href="https://example.com/full-version" target="_blank" class="btn cta-button">🎮 遊玩完整版</a>
+              <a href="https://example.com/learn-tips" target="_blank" class="btn btn-secondary">📘 瞭解如何取得高分</a>
+            </div>
+            <button class="btn btn-secondary" id="restartButton">重新挑戰</button>
         </div>
     </div>
 
@@ -1387,7 +1389,7 @@
             CANDLE_SPACING: 3,
             CONTRACT_SIZE: 100,
             INITIAL_BALANCE: 10000,
-            SIMULATION_DURATION_DAYS: 30,
+            SIMULATION_DURATION_DAYS: 7,
             // V11.0: Zoom Constraints (Feature 3)
             MIN_VISIBLE_CANDLES: 10,
             MAX_VISIBLE_CANDLES: 200,
@@ -1417,21 +1419,21 @@
         // 修改：成就係統調整。移除所有金融敏感詞彙、俚語或可能暗示快速致富的描述。
         const ACHIEVEMENTS = {
             FIRST_TRADE: { title: "模擬初體驗", description: "完成了第一筆模擬交易。", icon: "🎓" },
-            BIG_WIN: { title: "漂亮的操作", description: "單筆模擬交易獲得顯著虛擬收益。(>$3000)", icon: "🎯" },
-            BIG_LOSS: { title: "寶貴的經驗", description: "從大幅虛擬虧損中學習風險管理的重要性。(>$3000)", icon: "💡" },
-            WIN_STREAK_3: { title: "連戰連捷", description: "連續三次模擬交易獲得虛擬收益。", icon: "⭐" },
-            LOSS_STREAK_3: { title: "需要冷靜", description: "連續三次模擬交易出現虛擬虧損，建議重新審視策略。", icon: "🤔" },
-            HOLD_LOSS_7D: { title: "長期觀察", description: "持有處於虛擬虧損狀態的部位超過7天。", icon: "⏳" },
-            HOLD_WIN_7D: { title: "趨勢跟隨者", description: "成功持有一個處於虛擬收益狀態的部位超過7天。", icon: "📈" },
+            BIG_WIN: { title: "漂亮的操作", description: "單筆模擬交易獲得顯著分數。(>3000 分)", icon: "🎯" },
+            BIG_LOSS: { title: "寶貴的經驗", description: "從大幅虧損中學習風險管理的重要性。(>3000 分)", icon: "💡" },
+            WIN_STREAK_3: { title: "連戰連捷", description: "連續三次模擬交易獲得分數。", icon: "⭐" },
+            LOSS_STREAK_3: { title: "需要冷靜", description: "連續三次模擬交易出現虧損，建議重新審視策略。", icon: "🤔" },
+            HOLD_LOSS_7D: { title: "長期觀察", description: "持有處於虧損狀態的部位超過7天。", icon: "⏳" },
+            HOLD_WIN_7D: { title: "趨勢跟隨者", description: "成功持有一個處於獲利狀態的部位超過7天。", icon: "📈" },
             TRADER_10: { title: "積極練習", description: "累積完成了10筆模擬交易。", icon: "🔄" },
-            QUICK_DRAW: { title: "短線高手", description: "在1小時內完成一筆有虛擬收益的模擬交易。", icon: "⚡" },
-            DOUBLE_UP: { title: "模擬績效卓越", description: "虛擬帳戶淨值達到初始資金的兩倍。(>$20000)", icon: "🏆" },
-            MARGIN_CALL: { title: "風險警示", description: "虛擬帳戶淨值曾低於$2000，請注意風險控管。", icon: "⚠️" },
+            QUICK_DRAW: { title: "短線高手", description: "在1小時內完成一筆有分數的模擬交易。", icon: "⚡" },
+            DOUBLE_UP: { title: "績效卓越", description: "學習分數達到初始分數的兩倍。(>20000 分)", icon: "🏆" },
+            MARGIN_CALL: { title: "風險警示", description: "學習分數曾低於 2000 分，請注意風險控管。", icon: "⚠️" },
             CONSISTENT: { title: "穩健操作", description: "模擬結束時勝率>60%且至少10筆交易。", icon: "📊" },
-            DIAMOND_HANDS_LOSS: { title: "深度回撤觀察", description: "持有單一虛擬虧損部位超過30%仍未平倉。", icon: "👀" },
+            DIAMOND_HANDS_LOSS: { title: "深度回撤觀察", description: "持有單一虧損部位超過30%仍未平倉。", icon: "👀" },
             AVERAGE_DOWN: { title: "分批進場", description: "對同一方向建立模擬部位3次以上。", icon: "🧱" },
-            BAD_DAY: { title: "逆風考驗", description: "單日內執行了三次虛擬虧損的模擬交易。", icon: "🌧️" },
-            RUG_PULL: { title: "劇烈波動", description: "模擬帳戶在同日內由虛擬收益轉為虛擬虧損超過 $2000。", icon: "🎢" },
+            BAD_DAY: { title: "逆風考驗", description: "單日內執行了三次虧損的模擬交易。", icon: "🌧️" },
+            RUG_PULL: { title: "劇烈波動", description: "學習分數在同日內由獲利轉為虧損超過 2000 分。", icon: "🎢" },
         };
 
         const state = {
@@ -1478,7 +1480,7 @@
             tutorialActive: false,
             tutorialCompletedOnce: false,
             gameStartTime: null,
-            elapsedTime: 0,
+            remainingTime: 300,
             timerIntervalId: null,
             current7DayRange: { high: null, low: null },
             lastAlertedHigh: null,
@@ -1773,8 +1775,8 @@
             DOM.inputTP.value = "";
 
             state.gameStartTime = null;
-            state.elapsedTime = 0;
-            DOM.hudTimer.textContent = "00:00";
+            state.remainingTime = 300;
+            DOM.hudTimer.textContent = "05:00";
 
             state.current7DayRange = { high: null, low: null };
             state.lastAlertedHigh = null;
@@ -1905,17 +1907,21 @@
         }
 
         function startTimer() {
-            state.gameStartTime = Date.now();
             if (state.timerIntervalId) clearInterval(state.timerIntervalId);
             state.timerIntervalId = setInterval(updateTimer, 1000);
         }
 
         function updateTimer() {
-            if (state.gameStartTime && !state.isEnded) {
-                state.elapsedTime = Math.floor((Date.now() - state.gameStartTime) / 1000);
-                const minutes = Math.floor(state.elapsedTime / 60);
-                const seconds = state.elapsedTime % 60;
-                DOM.hudTimer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            if (state.isEnded) return;
+
+            state.remainingTime--;
+
+            const minutes = Math.floor(state.remainingTime / 60);
+            const seconds = state.remainingTime % 60;
+            DOM.hudTimer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+            if (state.remainingTime <= 0) {
+                endGame();
             }
         }
 
@@ -2035,7 +2041,7 @@
                 estimatedPL = Math.abs(currentPrice - price) * CONFIG.CONTRACT_SIZE * lots;
             }
 
-            const labelText = `${type}: ${type === 'SL' ? '-' : '+'}$${estimatedPL.toFixed(2)}`;
+            const labelText = `${type}: ${type === 'SL' ? '-' : '+'}${Math.round(estimatedPL)} 分`;
             const padding = 5;
             
             ctx.font = 'bold 12px sans-serif';
@@ -2719,8 +2725,9 @@
                     ctx.fillStyle = color;
                     ctx.font = 'bold 18px sans-serif';
                     ctx.textAlign = 'center';
-                    const floatY = y - progress * 60; 
-                    ctx.fillText(`$${anim.profit.toFixed(2)}`, x, floatY);
+                    const floatY = y - progress * 60;
+                    const profitText = anim.profit >= 0 ? `+${Math.round(anim.profit)}` : `${Math.round(anim.profit)}`;
+                    ctx.fillText(`${profitText} 分`, x, floatY);
                 }
                 
                 ctx.globalAlpha = 1;
@@ -2907,11 +2914,11 @@
             
             if (!isNaN(slPrice) && slPrice > 0) {
                 const slPL = Math.abs(currentPrice - slPrice) * CONFIG.CONTRACT_SIZE * lots;
-                DOM.estimateSL.textContent = `SL: -$${slPL.toFixed(2)}`;
+                DOM.estimateSL.textContent = `SL: -${Math.round(slPL)} 分`;
             }
             if (!isNaN(tpPrice) && tpPrice > 0) {
                 const tpPL = Math.abs(currentPrice - tpPrice) * CONFIG.CONTRACT_SIZE * lots;
-                DOM.estimateTP.textContent = `TP: +$${tpPL.toFixed(2)}`;
+                DOM.estimateTP.textContent = `TP: +${Math.round(tpPL)} 分`;
             }
         }
         
@@ -2923,8 +2930,9 @@
             const currentDate = new Date(state.gameData[displayIndex].time);
             DOM.hudDate.textContent = currentDate.toLocaleString('zh-TW', { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
             
-            DOM.hudEquity.textContent = `$${state.equity.toFixed(2)}`;
-            DOM.hudPL.textContent = `$${state.floatingPL.toFixed(2)}`;
+            DOM.hudEquity.textContent = `${Math.round(state.equity)} 分`;
+            const plText = state.floatingPL >= 0 ? `+${Math.round(state.floatingPL)}` : `${Math.round(state.floatingPL)}`;
+            DOM.hudPL.textContent = `${plText} 分`;
             DOM.hudPL.classList.toggle('positive', state.floatingPL > 0);
             DOM.hudPL.classList.toggle('negative', state.floatingPL < 0);
             
@@ -2986,7 +2994,8 @@
                 
                 // Update profit and SL/TP values
                 const profitElement = item.querySelector('.trade-profit');
-                const newProfitText = `$${pos.profit.toFixed(2)}`;
+                const profitText = pos.profit >= 0 ? `+${Math.round(pos.profit)}` : `${Math.round(pos.profit)}`;
+                const newProfitText = `${profitText} 分`;
                 if (profitElement.textContent !== newProfitText) {
                     profitElement.textContent = newProfitText;
                     profitElement.style.color = pos.profit >= 0 ? 'var(--color-success)' : 'var(--color-danger)';
@@ -3017,7 +3026,7 @@
                 item.innerHTML = `
                     <div class="trade-header">
                         <span class="trade-type ${trade.type}">#${trade.id} ${trade.type === 'BUY' ? '買入' : '賣出'} ${trade.lots.toFixed(2)}手</span>
-                        <span style="color: ${trade.profit >= 0 ? 'var(--color-success)' : 'var(--color-danger)'}">$${trade.profit.toFixed(2)}</span>
+                        <span style="color: ${trade.profit >= 0 ? 'var(--color-success)' : 'var(--color-danger)'}">${trade.profit >= 0 ? '+' : ''}${Math.round(trade.profit)} 分</span>
                     </div>
                     <div class="trade-details">
                         <div><div class="trade-detail-label">開倉價</div><div>${trade.entryPrice.toFixed(2)}</div></div>
@@ -3644,14 +3653,11 @@
                 }
             }
             
-            document.getElementById('finalScore').textContent = `$${state.equity.toFixed(2)}`;
+            document.getElementById('finalScore').textContent = `${Math.round(state.equity)} 分`;
             // 修改：強調模擬性質
-            document.getElementById('finalRoR').innerHTML = `模擬回報率 (Simulated RoR): ${(finalRoR * 100).toFixed(2)}% <br><small style="font-size: 14px; color: var(--color-text-secondary);">(模擬年化報酬率估算: ${(annualizedRoR * 100).toFixed(2)}%)</small>`;
-            document.getElementById('finalRoR').style.color = finalRoR >= 0 ? 'var(--color-success)' : 'var(--color-danger)';
+            document.getElementById('finalRoR').style.display = 'none';
             
-            const minutes = Math.floor(state.elapsedTime / 60);
-            const seconds = state.elapsedTime % 60;
-            document.getElementById('finalTime').textContent = `總花費時間: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            document.getElementById('finalTime').textContent = `遊戲時間: 5 分鐘`;
             
             // Performance Feedback
             const feedbackGeneral = getPerformanceFeedback(annualizedRoR, 'GENERAL');
@@ -3667,7 +3673,7 @@
             const winRate = totalTrades > 0 ? (state.tradeHistory.filter(t => t.profit > 0).length / totalTrades) * 100 : 0;
             const totalProfit = state.tradeHistory.reduce((sum, t) => sum + t.profit, 0);
             // 修改：標籤強調模擬性質
-            document.getElementById('endGameStats').innerHTML = `${feedbackHTML}<div style="margin-top: 20px; padding-top: 10px; border-top: 1px solid var(--color-border); text-align: left;"><p><strong>交易統計：</strong></p><ul style="list-style-position: inside; padding-left: 10px;"><li>總交易次數: ${totalTrades}</li><li>勝率: ${winRate.toFixed(2)}%</li><li>模擬總損益: $${totalProfit.toFixed(2)}</li><li>模擬期間: 約 ${Math.round(simulationDays)} 天</li></ul></div>`;
+            document.getElementById('endGameStats').innerHTML = `${feedbackHTML}<div style="margin-top: 20px; padding-top: 10px; border-top: 1px solid var(--color-border); text-align: left;"><p><strong>交易統計：</strong></p><ul style="list-style-position: inside; padding-left: 10px;"><li>總交易次數: ${totalTrades}</li><li>勝率: ${winRate.toFixed(2)}%</li><li>累積學習點數: ${Math.round(totalProfit)} 點</li><li>模擬期間: 約 ${Math.round(simulationDays)} 天</li></ul></div>`;
             
             displayAchievements();
             DOM.endGameModal.classList.add('active');
