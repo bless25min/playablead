@@ -7923,6 +7923,10 @@
             if (state.equity < state.achievementStats.minEquity) state.achievementStats.minEquity = state.equity;
             
             checkEquityAchievements();
+
+            if (state.equity <= 0 && !state.isEnded) {
+                endGame();
+            }
         }
 
         // ----------------------------------------------------------------------------
