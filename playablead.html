@@ -8263,9 +8263,6 @@
         function closeAllOrders() {
             if (state.openPositions.length === 0 || state.isEnded) return;
 
-            // V10.0: Added confirmation for closing all orders (Good practice)
-            if (!confirm(`確定要關閉所有 ${state.openPositions.length} 個持倉嗎？`)) return;
-
             const currentPrice = getCurrentPrice();
             // Iterate over a copy of the array as closeOrder modifies the original array
             [...state.openPositions].forEach(pos => closeOrder(pos.id, currentPrice));
@@ -8704,7 +8701,11 @@
             // 修改：強調模擬性質
             document.getElementById('finalRoR').style.display = 'none';
             
-            document.getElementById('finalTime').textContent = `遊戲時間: 5 分鐘`;
+            const totalDuration = 300;
+            const elapsedTimeInSeconds = totalDuration - state.remainingTime;
+            const minutes = Math.floor(elapsedTimeInSeconds / 60);
+            const seconds = elapsedTimeInSeconds % 60;
+            document.getElementById('finalTime').textContent = `遊戲時間: ${minutes}分 ${seconds.toString().padStart(2, '0')}秒`;
             
             // Performance Feedback
             const feedbackGeneral = getPerformanceFeedback(annualizedRoR, 'GENERAL');
@@ -8720,7 +8721,7 @@
             const winRate = totalTrades > 0 ? (state.tradeHistory.filter(t => t.profit > 0).length / totalTrades) * 100 : 0;
             const totalProfit = state.tradeHistory.reduce((sum, t) => sum + t.profit, 0);
             // 修改：標籤強調模擬性質
-            document.getElementById('endGameStats').innerHTML = `${feedbackHTML}<div style="margin-top: 20px; padding-top: 10px; border-top: 1px solid var(--color-border); text-align: left;"><p><strong>交易統計：</strong></p><ul style="list-style-position: inside; padding-left: 10px;"><li>總交易次數: ${totalTrades}</li><li>勝率: ${winRate.toFixed(2)}%</li><li>累積學習點數: ${Math.round(totalProfit)} 點</li><li>模擬期間: 約 ${Math.round(simulationDays)} 天</li></ul></div>`;
+            document.getElementById('endGameStats').innerHTML = `${feedbackHTML}<div style="margin-top: 20px; padding-top: 10px; border-top: 1px solid var(--color-border); text-align: left;"><p><strong>交易統計：</strong></p><ul style="list-style-position: inside; padding-left: 10px;"><li>總交易次數: ${totalTrades}</li><li>勝率: ${winRate.toFixed(2)}%</li><li>累積學習點數: ${Math.round(totalProfit)} 點</li></ul></div>`;
             
             displayAchievements();
             DOM.endGameModal.classList.add('active');
