@@ -6765,7 +6765,7 @@
             
             const initialVisibleCandles = calculateVisibleCandles();
             // Start with some history visible
-            state.currentIndex = Math.min(Math.floor(initialVisibleCandles * 0.8), state.gameData.length - 1);
+            state.currentIndex = 0;
             
             updateDailyStats();
             state.current7DayRange = calculate7DayRange();
