@@ -1293,9 +1293,9 @@
                 <!-- Content moved from old side-panel -->
                 <div class="challenge-info" id="challengeInfo">
                     <!-- 修改：強調模擬性質 -->
-                    <h4>🏆 30天交易模擬挑戰</h4>
+                    <h4>🏆 7日內5分鐘模擬挑戰</h4>
                     <!-- 修改：避免強調收益，改為強調技巧與績效 -->
-                    <p>從隨機歷史日期開始，在一個月內盡力提升交易技巧與模擬績效！</p>
+                    <p>從隨機歷史日期開始，在7日內盡力提升交易技巧與模擬績效！</p>
                 </div>
 
                 <div class="panel-tabs">
@@ -6536,7 +6536,7 @@
             CANDLE_SPACING: 3,
             CONTRACT_SIZE: 100,
             INITIAL_BALANCE: 10000,
-            SIMULATION_DURATION_DAYS: 10,
+            SIMULATION_DURATION_DAYS: 7,
             // V11.0: Zoom Constraints (Feature 3)
             MIN_VISIBLE_CANDLES: 10,
             MAX_VISIBLE_CANDLES: 200,
@@ -6779,6 +6779,11 @@
             if (!state.tutorialCompletedOnce) {
                 startTutorial();
             }
+
+        // Start the game simulation. It will run during the tutorial if applicable.
+        if (!state.isPlaying && !state.isEnded) {
+            togglePlayPause();
+        }
         }
 
         function resetState() {
@@ -6848,7 +6853,7 @@
             // 1. Define the fixed start and end dates (UTC)
             // Note: Months are 0-indexed in JavaScript's Date, so April is 3.
             const startDate = new Date(Date.UTC(2025, 3, 1, 0, 0, 0));
-            const endDate = new Date(Date.UTC(2025, 3, 10, 23, 59, 59));
+            const endDate = new Date(Date.UTC(2025, 3, 7, 23, 59, 59));
 
             const startTime = startDate.getTime();
             const endTime = endDate.getTime();
@@ -8734,7 +8739,7 @@
         // Define steps dynamically to handle mobile/desktop differences correctly
         // 修改：教學引導文字，強調學習和虛擬帳戶
         const TUTORIAL_STEPS = [
-            { selector: '.header', message: '歡迎！本次模擬挑戰目標是在30天內學習交易並提升績效。您可以在頂部追蹤虛擬帳戶狀態和進度。', action: 'next' },
+            { selector: '.header', message: '歡迎！本次模擬挑戰目標是在7日內學習交易並提升績效。您可以在頂部追蹤虛擬帳戶狀態和進度。', action: 'next' },
             // V11.0 (Feature 3 update)
             { selector: '.chart-container-v9', message: '圖表區域已最大化。拖曳查看歷史數據，使用滑鼠滾輪或手機雙指縮放 (Pinch-to-Zoom) 查看細節。', action: 'next' },
             // V11.0 (Feature 2 update)
@@ -8766,7 +8771,7 @@
         let currentTutorialStep = 0;
 
         function startTutorial() {
-            if (state.isPlaying) togglePlayPause();
+            // if (state.isPlaying) togglePlayPause(); // Game now runs during tutorial
             state.tutorialActive = true;
             currentTutorialStep = 0;
             showTutorialStep();
@@ -8886,7 +8891,8 @@
                 toggleCollapsibleControls();
             }
 
-            if (!state.isPlaying && !state.isEnded) togglePlayPause();
+            // Game is started by startGame, so no need to toggle here.
+            // if (!state.isPlaying && !state.isEnded) togglePlayPause();
         }
 
         // Optimized V7.3 (Kept in V9.0): Robust tutorial positioning
