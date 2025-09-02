@@ -304,6 +304,34 @@
             font-weight: bold;
         }
 
+        .timer-warning {
+            color: var(--color-danger);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        @keyframes shake {
+          10%, 90% { transform: translate3d(-1px, 0, 0); }
+          20%, 80% { transform: translate3d(2px, 0, 0); }
+          30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+          40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        .shake-animation {
+          animation: shake 0.82s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
         #hud-pl.positive { color: var(--color-success); }
         #hud-pl.negative { color: var(--color-danger); }
 
@@ -1187,7 +1215,7 @@
             <div class="hud-item">
                 <!-- 修改：強調是虛擬帳戶 -->
                 <span class="hud-label">學習分數</span>
-                <span class="hud-value" id="hud-equity">10000 分</span>
+                <span class="hud-value" id="hud-equity">5000 分</span>
             </div>
             <div class="hud-item">
                 <span class="hud-label">階段表現</span>
@@ -1197,7 +1225,7 @@
         <div class="hud-right">
             <div class="hud-item">
                 <span class="hud-label">剩餘時間</span>
-                <span class="hud-value" id="hud-timer">05:00</span>
+                <span class="hud-value" id="hud-timer">01:00</span>
             </div>
             <div class="hud-item progress-container">
                 <span class="hud-label">挑戰進度</span>
@@ -1265,7 +1293,7 @@
                     </div>
                     <div class="input-group-horizontal">
                        <label for="inputLots">手數</label>
-                       <input type="number" class="input-field scrubbable" id="inputLots" value="0.10" step="0.01" min="0.01" data-scrub-step="0.05">
+                       <input type="number" class="input-field scrubbable" id="inputLots" value="1.00" step="0.01" min="0.01" data-scrub-step="0.05" disabled>
                    </div>
                    <div class="input-group-horizontal">
                        <label for="inputTP">TP</label>
@@ -1340,6 +1368,7 @@
 
     <div class="modal-overlay" id="endGameModal">
         <div class="modal-content">
+            <canvas id="celebrationCanvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1;"></canvas>
             <h2 class="modal-title">🎉 挑戰結束！</h2>
             <div class="modal-body" style="text-align: center;">
                 <!-- 修改：強調模擬成績 -->
@@ -1363,12 +1392,6 @@
             </div>
             <button class="btn btn-secondary" id="restartButton">重新挑戰</button>
         </div>
-    </div>
-
-    <div class="tutorial-highlight hidden" id="tutorialHighlight"></div>
-    <div class="tutorial-message hidden" id="tutorialMessage">
-        <p id="tutorialText"></p>
-        <button class="btn btn-small" id="tutorialNextBtn" style="margin-top: 10px; background-color: white; color: var(--color-primary);">下一步</button>
     </div>
 
     <script>
@@ -6535,7 +6558,7 @@
             CANDLE_WIDTH_DEFAULT: 8,
             CANDLE_SPACING: 3,
             CONTRACT_SIZE: 100,
-            INITIAL_BALANCE: 10000,
+            INITIAL_BALANCE: 5000,
             SIMULATION_DURATION_DAYS: 7,
             // V11.0: Zoom Constraints (Feature 3)
             MIN_VISIBLE_CANDLES: 10,
@@ -6621,13 +6644,17 @@
                 pinchStartDistance: 0,
                 pinchStartCandleWidth: 0,
                 isPinching: false,
+                dragVelocity: 0,
+                inertiaAnimationFrameId: null,
+                dragLastX: 0,
+                dragLastTime: 0,
             },
             mouse: { x: -1, y: -1, isOverChart: false },
             isMobile: false,
             tutorialActive: false,
             tutorialCompletedOnce: false,
             gameStartTime: null,
-            remainingTime: 300,
+            remainingTime: 60,
             timerIntervalId: null,
             current7DayRange: { high: null, low: null },
             lastAlertedHigh: null,
@@ -6652,6 +6679,7 @@
             ],
             triggeredEvents: new Set(),
             wasPlayingBeforeEvent: false,
+            fireworkParticles: [],
         };
 
         const DOM = {};
@@ -6776,10 +6804,6 @@
             updateUI();
             requestAnimationFrame(draw);
 
-            if (!state.tutorialCompletedOnce) {
-                startTutorial();
-            }
-
         // Start the game simulation. It will run during the tutorial if applicable.
         if (!state.isPlaying && !state.isEnded) {
             togglePlayPause();
@@ -6791,6 +6815,7 @@
                 clearInterval(state.timerIntervalId);
                 state.timerIntervalId = null;
             }
+            DOM.hudTimer.classList.remove('timer-warning');
             state.balance = CONFIG.INITIAL_BALANCE;
             state.equity = CONFIG.INITIAL_BALANCE;
             state.floatingPL = 0;
@@ -6817,13 +6842,13 @@
             DOM.positionsList.querySelectorAll('.trade-item').forEach(item => item.remove());
             DOM.historyList.querySelectorAll('.trade-item').forEach(item => item.remove());
             
-            DOM.inputLots.value = "0.10";
+            DOM.inputLots.value = "1.00";
             DOM.inputSL.value = "";
             DOM.inputTP.value = "";
 
             state.gameStartTime = null;
-            state.remainingTime = 300;
-            DOM.hudTimer.textContent = "05:00";
+            state.remainingTime = 60;
+            DOM.hudTimer.textContent = "01:00";
 
             state.current7DayRange = { high: null, low: null };
             state.lastAlertedHigh = null;
@@ -6971,6 +6996,12 @@
             const seconds = state.remainingTime % 60;
             DOM.hudTimer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 
+            if (state.remainingTime <= 10) {
+                DOM.hudTimer.classList.add('timer-warning');
+            } else {
+                DOM.hudTimer.classList.remove('timer-warning');
+            }
+
             if (state.remainingTime <= 0) {
                 endGame();
             }
@@ -7041,6 +7072,7 @@
             drawCrosshair(ctx);
             drawTradeAnimations(ctx);
             drawChartAlertAnimations(ctx);
+            drawFireworks(ctx);
             updatePositionOverlays();
         }
 
@@ -7730,6 +7762,59 @@
             if (animationsRunning && !state.isPlaying) requestAnimationFrame(draw);
         }
 
+        function createFireworks(x, y, count = 100) {
+            const colors = ['#ffc700', '#ff004d', '#00e0ff', '#2bff88', '#ffffff'];
+            for (let i = 0; i < count; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 5 + 2;
+                const vx = Math.cos(angle) * speed;
+                const vy = Math.sin(angle) * speed;
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                const size = Math.random() * 2 + 1;
+                const lifespan = Math.random() * 60 + 60;
+
+                state.fireworkParticles.push({
+                    x, y, vx, vy, color, size, lifespan,
+                    initialLifespan: lifespan,
+                });
+            }
+        }
+
+        function drawFireworks(ctx) {
+            const gravity = 0.1;
+            let animationsRunning = false;
+
+            for (let i = state.fireworkParticles.length - 1; i >= 0; i--) {
+                const p = state.fireworkParticles[i];
+                p.vy += gravity;
+                p.vx *= 0.99;
+                p.vy *= 0.99;
+                p.x += p.vx;
+                p.y += p.vy;
+                p.lifespan--;
+
+                if (p.lifespan <= 0) {
+                    state.fireworkParticles.splice(i, 1);
+                    continue;
+                }
+
+                const opacity = Math.max(0, p.lifespan / p.initialLifespan);
+                ctx.globalAlpha = opacity;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+
+                animationsRunning = true;
+            }
+
+            ctx.globalAlpha = 1.0;
+
+            if (animationsRunning && !state.isPlaying) {
+                requestAnimationFrame(draw);
+            }
+        }
+
         function drawTradeAnimations(ctx) {
             const now = performance.now();
             let animationsRunning = false;
@@ -7773,12 +7858,23 @@
                 } else if (anim.type === 'CLOSE') {
                     // Draw floating profit/loss text
                     const color = anim.profit >= 0 ? getComputedStyle(document.documentElement).getPropertyValue('--color-success').trim() : getComputedStyle(document.documentElement).getPropertyValue('--color-danger').trim();
+                    ctx.globalAlpha = opacity;
                     ctx.fillStyle = color;
                     ctx.font = 'bold 18px sans-serif';
                     ctx.textAlign = 'center';
                     const floatY = y - progress * 60;
                     const profitText = anim.profit >= 0 ? `+${Math.round(anim.profit)}` : `${Math.round(anim.profit)}`;
                     ctx.fillText(`${profitText} 分`, x, floatY);
+
+                    // Draw ripple effect
+                    const rippleRadius = progress * 40;
+                    const rippleOpacity = 1 - progress;
+                    ctx.globalAlpha = rippleOpacity * 0.5;
+                    ctx.strokeStyle = color;
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.arc(x, y, rippleRadius, 0, Math.PI * 2);
+                    ctx.stroke();
                 }
                 
                 ctx.globalAlpha = 1;
@@ -7842,6 +7938,20 @@
             const profit = calculateProfit(position, closePrice);
             state.balance += profit;
             
+            if (profit > 0) {
+                const x = indexToX(Math.min(state.currentIndex, state.gameData.length - 1));
+                const y = priceToY(closePrice);
+                const count = Math.min(300, 50 + Math.floor(profit / 50));
+                createFireworks(x, y, count);
+            }
+
+            if (profit < 0) {
+                DOM.chartWrap.classList.add('shake-animation');
+                setTimeout(() => {
+                    DOM.chartWrap.classList.remove('shake-animation');
+                }, 820);
+            }
+
             let closeTime;
             if (state.gameData && state.gameData.length > 0) {
                 let closeIndex = state.currentIndex;
@@ -8342,6 +8452,10 @@
         }
 
         function zoomChart(factor) {
+            if (state.chart.inertiaAnimationFrameId) {
+                cancelAnimationFrame(state.chart.inertiaAnimationFrameId);
+                state.chart.inertiaAnimationFrameId = null;
+            }
             const newWidth = state.chart.candleWidth * factor;
             
             // V11.0: Enforce Zoom Constraints (Feature 3)
@@ -8561,6 +8675,10 @@
         }
 
         function startDrag(clientX, clientY) {
+            if (state.chart.inertiaAnimationFrameId) {
+                cancelAnimationFrame(state.chart.inertiaAnimationFrameId);
+                state.chart.inertiaAnimationFrameId = null;
+            }
             // V11.0: Check if starting a line drag (Feature 1)
             const rect = DOM.chartWrap.getBoundingClientRect();
             const chartX = clientX - rect.left;
@@ -8587,11 +8705,22 @@
             state.chart.dragCurrentX = clientX;
             state.chart.dragCurrentY = clientY;
             state.chart.dragStartTimeStamp = Date.now();
+            state.chart.dragLastX = clientX;
+            state.chart.dragLastTime = state.chart.dragStartTimeStamp;
+            state.chart.dragVelocity = 0;
         }
 
         function performDrag(clientX, clientY) {
+            const now = Date.now();
+            const deltaTime = now - state.chart.dragLastTime;
+            const dxSinceLast = clientX - state.chart.dragLastX;
+
             state.chart.dragCurrentX = clientX;
             state.chart.dragCurrentY = clientY;
+
+            if (deltaTime > 0) {
+                state.chart.dragVelocity = dxSinceLast / deltaTime;
+            }
 
             // V11.0: Handle line dragging (Feature 1)
             if (state.chart.draggedLineType) {
@@ -8616,6 +8745,9 @@
                 validateScrollOffset();
                 requestAnimationFrame(draw);
             }
+
+            state.chart.dragLastX = clientX;
+            state.chart.dragLastTime = now;
         }
 
         function endDrag() {
@@ -8624,7 +8756,40 @@
             state.chart.draggedLineType = null;
             // V11.0: Restore cursor based on current hover state
             updateCursorStyle(); 
+
+            if (Math.abs(state.chart.dragVelocity) > 0.1) {
+                startInertia();
+            }
             if (!state.isPlaying) requestAnimationFrame(draw);
+        }
+
+        function startInertia() {
+            if (state.chart.inertiaAnimationFrameId) {
+                cancelAnimationFrame(state.chart.inertiaAnimationFrameId);
+            }
+            state.chart.inertiaAnimationFrameId = requestAnimationFrame(inertiaLoop);
+        }
+
+        function inertiaLoop() {
+            const FRICTION = 0.95;
+            state.chart.dragVelocity *= FRICTION;
+
+            if (Math.abs(state.chart.dragVelocity) < 0.01) {
+                state.chart.inertiaAnimationFrameId = null;
+                return;
+            }
+
+            const candleUnitWidth = state.chart.candleWidth + state.chart.candleSpacing;
+            if (candleUnitWidth <= 0) return;
+
+            const scrollChange = state.chart.dragVelocity * 16; // 16ms ~ 60fps
+            const offsetChange = scrollChange / candleUnitWidth;
+
+            state.chart.scrollOffset += offsetChange;
+            validateScrollOffset();
+            draw();
+
+            state.chart.inertiaAnimationFrameId = requestAnimationFrame(inertiaLoop);
         }
 
         function validateScrollOffset() {
@@ -8709,7 +8874,7 @@
             // 修改：強調模擬性質
             document.getElementById('finalRoR').style.display = 'none';
             
-            const totalDuration = 300;
+            const totalDuration = 60;
             const elapsedTimeInSeconds = totalDuration - state.remainingTime;
             const minutes = Math.floor(elapsedTimeInSeconds / 60);
             const seconds = elapsedTimeInSeconds % 60;
@@ -8733,6 +8898,101 @@
             
             displayAchievements();
             DOM.endGameModal.classList.add('active');
+
+            if (state.equity > CONFIG.INITIAL_BALANCE) {
+                setTimeout(startCelebration, 100);
+            }
+        }
+
+        const celebrationState = {
+            canvas: null,
+            ctx: null,
+            particles: [],
+            animationFrameId: null,
+            lastBurstTime: 0,
+            duration: 5000,
+            startTime: 0,
+        };
+
+        function startCelebration() {
+            celebrationState.canvas = document.getElementById('celebrationCanvas');
+            if (!celebrationState.canvas) return;
+            celebrationState.ctx = celebrationState.canvas.getContext('2d');
+
+            const dpr = window.devicePixelRatio || 1;
+            const rect = celebrationState.canvas.parentElement.getBoundingClientRect();
+            celebrationState.canvas.width = rect.width * dpr;
+            celebrationState.canvas.height = rect.height * dpr;
+            celebrationState.ctx.scale(dpr, dpr);
+
+            celebrationState.particles = [];
+            celebrationState.startTime = performance.now();
+            celebrationState.lastBurstTime = 0;
+
+            if (celebrationState.animationFrameId) {
+                cancelAnimationFrame(celebrationState.animationFrameId);
+            }
+            celebrationState.animationFrameId = requestAnimationFrame(celebrationLoop);
+        }
+
+        function celebrationLoop(timestamp) {
+            const { ctx, canvas, particles } = celebrationState;
+            if (!ctx || !canvas) return;
+
+            const elapsed = timestamp - celebrationState.startTime;
+
+            if (elapsed > celebrationState.duration) {
+                cancelAnimationFrame(celebrationState.animationFrameId);
+                celebrationState.animationFrameId = null;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                return;
+            }
+
+            if (timestamp - celebrationState.lastBurstTime > 400) {
+                celebrationState.lastBurstTime = timestamp;
+                const x = Math.random() * canvas.width / (window.devicePixelRatio || 1);
+                const y = Math.random() * canvas.height / (window.devicePixelRatio || 1) * 0.7;
+                createCelebrationFireworks(x, y, 80);
+            }
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const gravity = 0.1;
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.vy += gravity;
+                p.x += p.vx;
+                p.y += p.vy;
+                p.lifespan--;
+
+                if (p.lifespan <= 0) {
+                    particles.splice(i, 1);
+                    continue;
+                }
+
+                const opacity = Math.max(0, p.lifespan / p.initialLifespan);
+                ctx.globalAlpha = opacity;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1.0;
+
+            celebrationState.animationFrameId = requestAnimationFrame(celebrationLoop);
+        }
+
+        function createCelebrationFireworks(x, y, count) {
+            const colors = ['#ffc700', '#ff004d', '#00e0ff', '#2bff88', '#ffffff'];
+            for (let i = 0; i < count; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 4 + 1;
+                const vx = Math.cos(angle) * speed;
+                const vy = Math.sin(angle) * speed;
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                const size = Math.random() * 2 + 1;
+                const lifespan = Math.random() * 50 + 40;
+                celebrationState.particles.push({ x, y, vx, vy, color, size, lifespan, initialLifespan: lifespan });
+            }
         }
 
         // V11.0: Updated Tutorial Steps (including new features)
