@@ -304,6 +304,23 @@
             font-weight: bold;
         }
 
+        .timer-warning {
+            color: var(--color-danger);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
         #hud-pl.positive { color: var(--color-success); }
         #hud-pl.negative { color: var(--color-danger); }
 
@@ -6615,6 +6632,10 @@
                 pinchStartDistance: 0,
                 pinchStartCandleWidth: 0,
                 isPinching: false,
+                dragVelocity: 0,
+                inertiaAnimationFrameId: null,
+                dragLastX: 0,
+                dragLastTime: 0,
             },
             mouse: { x: -1, y: -1, isOverChart: false },
             isMobile: false,
@@ -6781,6 +6802,7 @@
                 clearInterval(state.timerIntervalId);
                 state.timerIntervalId = null;
             }
+            DOM.hudTimer.classList.remove('timer-warning');
             state.balance = CONFIG.INITIAL_BALANCE;
             state.equity = CONFIG.INITIAL_BALANCE;
             state.floatingPL = 0;
@@ -6960,6 +6982,12 @@
             const minutes = Math.floor(state.remainingTime / 60);
             const seconds = state.remainingTime % 60;
             DOM.hudTimer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+            if (state.remainingTime <= 10) {
+                DOM.hudTimer.classList.add('timer-warning');
+            } else {
+                DOM.hudTimer.classList.remove('timer-warning');
+            }
 
             if (state.remainingTime <= 0) {
                 endGame();
@@ -7763,12 +7791,23 @@
                 } else if (anim.type === 'CLOSE') {
                     // Draw floating profit/loss text
                     const color = anim.profit >= 0 ? getComputedStyle(document.documentElement).getPropertyValue('--color-success').trim() : getComputedStyle(document.documentElement).getPropertyValue('--color-danger').trim();
+                    ctx.globalAlpha = opacity;
                     ctx.fillStyle = color;
                     ctx.font = 'bold 18px sans-serif';
                     ctx.textAlign = 'center';
                     const floatY = y - progress * 60;
                     const profitText = anim.profit >= 0 ? `+${Math.round(anim.profit)}` : `${Math.round(anim.profit)}`;
                     ctx.fillText(`${profitText} 分`, x, floatY);
+
+                    // Draw ripple effect
+                    const rippleRadius = progress * 40;
+                    const rippleOpacity = 1 - progress;
+                    ctx.globalAlpha = rippleOpacity * 0.5;
+                    ctx.strokeStyle = color;
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.arc(x, y, rippleRadius, 0, Math.PI * 2);
+                    ctx.stroke();
                 }
                 
                 ctx.globalAlpha = 1;
@@ -8332,6 +8371,10 @@
         }
 
         function zoomChart(factor) {
+            if (state.chart.inertiaAnimationFrameId) {
+                cancelAnimationFrame(state.chart.inertiaAnimationFrameId);
+                state.chart.inertiaAnimationFrameId = null;
+            }
             const newWidth = state.chart.candleWidth * factor;
             
             // V11.0: Enforce Zoom Constraints (Feature 3)
@@ -8551,6 +8594,10 @@
         }
 
         function startDrag(clientX, clientY) {
+            if (state.chart.inertiaAnimationFrameId) {
+                cancelAnimationFrame(state.chart.inertiaAnimationFrameId);
+                state.chart.inertiaAnimationFrameId = null;
+            }
             // V11.0: Check if starting a line drag (Feature 1)
             const rect = DOM.chartWrap.getBoundingClientRect();
             const chartX = clientX - rect.left;
@@ -8577,11 +8624,22 @@
             state.chart.dragCurrentX = clientX;
             state.chart.dragCurrentY = clientY;
             state.chart.dragStartTimeStamp = Date.now();
+            state.chart.dragLastX = clientX;
+            state.chart.dragLastTime = state.chart.dragStartTimeStamp;
+            state.chart.dragVelocity = 0;
         }
 
         function performDrag(clientX, clientY) {
+            const now = Date.now();
+            const deltaTime = now - state.chart.dragLastTime;
+            const dxSinceLast = clientX - state.chart.dragLastX;
+
             state.chart.dragCurrentX = clientX;
             state.chart.dragCurrentY = clientY;
+
+            if (deltaTime > 0) {
+                state.chart.dragVelocity = dxSinceLast / deltaTime;
+            }
 
             // V11.0: Handle line dragging (Feature 1)
             if (state.chart.draggedLineType) {
@@ -8606,6 +8664,9 @@
                 validateScrollOffset();
                 requestAnimationFrame(draw);
             }
+
+            state.chart.dragLastX = clientX;
+            state.chart.dragLastTime = now;
         }
 
         function endDrag() {
@@ -8614,7 +8675,40 @@
             state.chart.draggedLineType = null;
             // V11.0: Restore cursor based on current hover state
             updateCursorStyle(); 
+
+            if (Math.abs(state.chart.dragVelocity) > 0.1) {
+                startInertia();
+            }
             if (!state.isPlaying) requestAnimationFrame(draw);
+        }
+
+        function startInertia() {
+            if (state.chart.inertiaAnimationFrameId) {
+                cancelAnimationFrame(state.chart.inertiaAnimationFrameId);
+            }
+            state.chart.inertiaAnimationFrameId = requestAnimationFrame(inertiaLoop);
+        }
+
+        function inertiaLoop() {
+            const FRICTION = 0.95;
+            state.chart.dragVelocity *= FRICTION;
+
+            if (Math.abs(state.chart.dragVelocity) < 0.01) {
+                state.chart.inertiaAnimationFrameId = null;
+                return;
+            }
+
+            const candleUnitWidth = state.chart.candleWidth + state.chart.candleSpacing;
+            if (candleUnitWidth <= 0) return;
+
+            const scrollChange = state.chart.dragVelocity * 16; // 16ms ~ 60fps
+            const offsetChange = scrollChange / candleUnitWidth;
+
+            state.chart.scrollOffset += offsetChange;
+            validateScrollOffset();
+            draw();
+
+            state.chart.inertiaAnimationFrameId = requestAnimationFrame(inertiaLoop);
         }
 
         function validateScrollOffset() {
