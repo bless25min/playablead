@@ -321,6 +321,17 @@
             }
         }
 
+        @keyframes shake {
+          10%, 90% { transform: translate3d(-1px, 0, 0); }
+          20%, 80% { transform: translate3d(2px, 0, 0); }
+          30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+          40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        .shake-animation {
+          animation: shake 0.82s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
         #hud-pl.positive { color: var(--color-success); }
         #hud-pl.negative { color: var(--color-danger); }
 
@@ -7932,6 +7943,13 @@
                 const y = priceToY(closePrice);
                 const count = Math.min(300, 50 + Math.floor(profit / 50));
                 createFireworks(x, y, count);
+            }
+
+            if (profit < 0) {
+                DOM.chartWrap.classList.add('shake-animation');
+                setTimeout(() => {
+                    DOM.chartWrap.classList.remove('shake-animation');
+                }, 820);
             }
 
             let closeTime;
