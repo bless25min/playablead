@@ -1187,7 +1187,7 @@
             <div class="hud-item">
                 <!-- 修改：強調是虛擬帳戶 -->
                 <span class="hud-label">學習分數</span>
-                <span class="hud-value" id="hud-equity">10000 分</span>
+                <span class="hud-value" id="hud-equity">5000 分</span>
             </div>
             <div class="hud-item">
                 <span class="hud-label">階段表現</span>
@@ -1197,7 +1197,7 @@
         <div class="hud-right">
             <div class="hud-item">
                 <span class="hud-label">剩餘時間</span>
-                <span class="hud-value" id="hud-timer">05:00</span>
+                <span class="hud-value" id="hud-timer">01:00</span>
             </div>
             <div class="hud-item progress-container">
                 <span class="hud-label">挑戰進度</span>
@@ -1265,7 +1265,7 @@
                     </div>
                     <div class="input-group-horizontal">
                        <label for="inputLots">手數</label>
-                       <input type="number" class="input-field scrubbable" id="inputLots" value="0.10" step="0.01" min="0.01" data-scrub-step="0.05">
+                       <input type="number" class="input-field scrubbable" id="inputLots" value="1.00" step="0.01" min="0.01" data-scrub-step="0.05" disabled>
                    </div>
                    <div class="input-group-horizontal">
                        <label for="inputTP">TP</label>
@@ -1363,12 +1363,6 @@
             </div>
             <button class="btn btn-secondary" id="restartButton">重新挑戰</button>
         </div>
-    </div>
-
-    <div class="tutorial-highlight hidden" id="tutorialHighlight"></div>
-    <div class="tutorial-message hidden" id="tutorialMessage">
-        <p id="tutorialText"></p>
-        <button class="btn btn-small" id="tutorialNextBtn" style="margin-top: 10px; background-color: white; color: var(--color-primary);">下一步</button>
     </div>
 
     <script>
@@ -6535,7 +6529,7 @@
             CANDLE_WIDTH_DEFAULT: 8,
             CANDLE_SPACING: 3,
             CONTRACT_SIZE: 100,
-            INITIAL_BALANCE: 10000,
+            INITIAL_BALANCE: 5000,
             SIMULATION_DURATION_DAYS: 7,
             // V11.0: Zoom Constraints (Feature 3)
             MIN_VISIBLE_CANDLES: 10,
@@ -6627,7 +6621,7 @@
             tutorialActive: false,
             tutorialCompletedOnce: false,
             gameStartTime: null,
-            remainingTime: 300,
+            remainingTime: 60,
             timerIntervalId: null,
             current7DayRange: { high: null, low: null },
             lastAlertedHigh: null,
@@ -6776,10 +6770,6 @@
             updateUI();
             requestAnimationFrame(draw);
 
-            if (!state.tutorialCompletedOnce) {
-                startTutorial();
-            }
-
         // Start the game simulation. It will run during the tutorial if applicable.
         if (!state.isPlaying && !state.isEnded) {
             togglePlayPause();
@@ -6817,13 +6807,13 @@
             DOM.positionsList.querySelectorAll('.trade-item').forEach(item => item.remove());
             DOM.historyList.querySelectorAll('.trade-item').forEach(item => item.remove());
             
-            DOM.inputLots.value = "0.10";
+            DOM.inputLots.value = "1.00";
             DOM.inputSL.value = "";
             DOM.inputTP.value = "";
 
             state.gameStartTime = null;
-            state.remainingTime = 300;
-            DOM.hudTimer.textContent = "05:00";
+            state.remainingTime = 60;
+            DOM.hudTimer.textContent = "01:00";
 
             state.current7DayRange = { high: null, low: null };
             state.lastAlertedHigh = null;
@@ -8709,7 +8699,7 @@
             // 修改：強調模擬性質
             document.getElementById('finalRoR').style.display = 'none';
             
-            const totalDuration = 300;
+            const totalDuration = 60;
             const elapsedTimeInSeconds = totalDuration - state.remainingTime;
             const minutes = Math.floor(elapsedTimeInSeconds / 60);
             const seconds = elapsedTimeInSeconds % 60;
